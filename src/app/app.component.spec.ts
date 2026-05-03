@@ -14,16 +14,22 @@ describe('AppComponent', () => {
     expect(app).toBeTruthy();
   });
 
-  it(`should have the 'kakoha-temp' title`, () => {
+  it('should have accuracy signal initialized', () => {
     const fixture = TestBed.createComponent(AppComponent);
     const app = fixture.componentInstance;
-    expect(app.title).toEqual('kakoha-temp');
+    expect(app.accuracy()).toBeTruthy();
   });
 
-  it('should render title', () => {
+  it('should have latency signal initialized', () => {
+    const fixture = TestBed.createComponent(AppComponent);
+    const app = fixture.componentInstance;
+    expect(app.latency()).toBeTruthy();
+  });
+
+  it('should render header title', () => {
     const fixture = TestBed.createComponent(AppComponent);
     fixture.detectChanges();
     const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('h1')?.textContent).toContain('Hello, kakoha-temp');
+    expect(compiled.querySelector('.header-title')?.textContent).toContain('KAKOHA WAVE PROCESSING ENGINE');
   });
 });

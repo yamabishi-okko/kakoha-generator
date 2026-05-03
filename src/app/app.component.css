@@ -1,0 +1,47 @@
+.header {
+  border-bottom: 1px solid #00ff8830;
+  padding: 10px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.header-title {
+  font-size: 11px;
+  letter-spacing: 3px;
+  color: #00ff88;
+}
+
+.header-stats {
+  display: flex;
+  gap: 20px;
+}
+
+.stat { text-align: right; }
+
+.stat-val {
+  font-size: 15px;
+  color: #00ff88;
+}
+
+.stat-lbl {
+  font-size: 8px;
+  color: #336633;
+  letter-spacing: 2px;
+}
+
+.main {
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 32px 24px;
+}
+
+.footer {
+  border-top: 1px solid #00ff8815;
+  padding: 8px 24px;
+  font-size: 8px;
+  color: #1a3a1a;
+  letter-spacing: 2px;
+  text-align: center;
+  margin-top: 20px;
+}
