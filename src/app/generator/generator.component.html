@@ -1,0 +1,66 @@
+<div class="panel">
+  <div class="panel-header">
+    <span>INPUT MODULE</span>
+    <span class="active-badge">● ACTIVE</span>
+  </div>
+  <div class="panel-body">
+    <textarea
+      class="input-box"
+      placeholder="> ENTER TEXT PAYLOAD_"
+      [value]="inputText()"
+      (input)="inputText.set($any($event.target).value)"
+    ></textarea>
+
+    <div class="controls">
+      <div class="ctrl-group">
+        <div class="ctrl-label">OSCILLATION AMPLITUDE</div>
+        <div class="slider-row">
+          <input
+            type="range"
+            class="slider"
+            min="2"
+            max="20"
+            [value]="width()"
+            (input)="width.set(+$any($event.target).value)"
+          />
+          <span class="slider-val">{{ width() }}</span>
+        </div>
+      </div>
+
+      <div class="ctrl-group ctrl-group--fixed">
+        <div class="ctrl-label">WAVE PATTERN</div>
+        <div class="shape-btns">
+          @for (s of shapes; track s.value) {
+            <button
+              class="shape-btn"
+              [class.active]="shape() === s.value"
+              (click)="setShape(s.value)"
+            >{{ s.label }}</button>
+          }
+        </div>
+      </div>
+    </div>
+
+    <button class="exec-btn" (click)="generate()">▶ EXECUTE WAVE GENERATION</button>
+  </div>
+</div>
+
+<div class="panel">
+  <div class="panel-header">
+    <span>OUTPUT STREAM</span>
+    <span class="char-count">
+      {{ charCount() > 0 ? charCount() + ' CHARS PROCESSED' : '—' }}
+    </span>
+  </div>
+  <div class="panel-body">
+    <div class="output-box">{{ output() }}</div>
+    <div class="output-footer">
+      <span>
+        STATUS: {{ status() === 'complete' ? 'WAVE GENERATION COMPLETE' : 'AWAITING INPUT' }}
+      </span>
+      <button class="copy-btn" (click)="copyToClipboard()">
+        {{ copied() ? 'COPIED' : 'COPY TO CLIPBOARD' }}
+      </button>
+    </div>
+  </div>
+</div>

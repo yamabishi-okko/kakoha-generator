@@ -1,0 +1,17 @@
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  height: 100%;
+}
+
+body {
+  background: #060612;
+  color: #00ff88;
+  font-family: 'Courier New', monospace;
+  font-size: 13px;
+  min-height: 100vh;
+}
