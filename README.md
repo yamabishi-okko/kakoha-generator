@@ -76,27 +76,31 @@ ng build
 
 #### ページを開いたときの流れ（⭐️）
 
-① `src/main.ts` の **2行目**
-② `src/index.html` の **11行目**（なぜ JS が実行されるのか仕組みを説明）
-③ `src/app/app.config.ts` の **2行目**
-④ `src/app/app.routes.ts` の **2行目**
-⑤ `src/app/app.component.ts` の **5行目**（⭐️④）
-⑥ `src/app/app.component.ts` の **54行目**（⭐️⑤）
-⑦ `src/app/app.component.html` の **2行目**（⭐️⑥）
-⑧ `src/app/app.component.html` の **42行目**（⭐️⑦）
-⑨ `src/app/generator/generator.component.ts` の **5行目**（⭐️⑧）
-⑩ `src/app/generator/generator.component.html` の **2行目**（テンプレートの記法一覧）
+| 順番 | ファイル | 行番号 | 備考 |
+| ---- | -------- | ------ | ---- |
+| 1 | `src/main.ts` | 2行目 | ⭐️① |
+| 2 | `src/index.html` | 11行目 | なぜ JS が実行されるのか仕組みを説明 |
+| 3 | `src/app/app.config.ts` | 2行目 | ⭐️② |
+| 4 | `src/app/app.routes.ts` | 2行目 | ⭐️③ |
+| 5 | `src/app/app.component.ts` | 5行目 | ⭐️④ |
+| 6 | `src/app/app.component.ts` | 54行目 | ⭐️⑤ |
+| 7 | `src/app/app.component.html` | 2行目 | ⭐️⑥ |
+| 8 | `src/app/app.component.html` | 42行目 | ⭐️⑦ |
+| 9 | `src/app/generator/generator.component.ts` | 5行目 | ⭐️⑧ |
+| 10 | `src/app/generator/generator.component.html` | 2行目 | テンプレートの記法一覧 |
 
 #### 波変換ボタンを押したときの流れ（🌙）
 
-① `src/app/generator/generator.component.html` の **85行目**（🌙①）
-② `src/app/generator/generator.component.ts` の **62行目**（🌙②）
-③ `src/app/wave.service.ts` の **29行目**（🌙③）
-④ `src/app/wave.service.ts` の **53行目**（🌙④ ループ処理）
-⑤ `src/app/wave.service.ts` の **68行目**（🌙⑤ indent 計算）
-⑥ `src/app/generator/generator.component.ts` の **84行目**（🌙⑥）
-⑦ `src/app/generator/generator.component.ts` の **87行目**（🌙⑦）
-⑧ `src/app/generator/generator.component.html` の **110行目**（🌙⑧）
+| 順番 | ファイル | 行番号 | 備考 |
+| ---- | -------- | ------ | ---- |
+| 1 | `src/app/generator/generator.component.html` | 85行目 | 🌙① |
+| 2 | `src/app/generator/generator.component.ts` | 62行目 | 🌙② |
+| 3 | `src/app/wave.service.ts` | 29行目 | 🌙③ |
+| 4 | `src/app/wave.service.ts` | 53行目 | 🌙④ ループ処理 |
+| 5 | `src/app/wave.service.ts` | 68行目 | 🌙⑤ indent 計算 |
+| 6 | `src/app/generator/generator.component.ts` | 84行目 | 🌙⑥ |
+| 7 | `src/app/generator/generator.component.ts` | 87行目 | 🌙⑦ |
+| 8 | `src/app/generator/generator.component.html` | 110行目 | 🌙⑧ |
 
 ### ページを開いたときの実行順序（⭐️）
 
