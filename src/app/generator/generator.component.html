@@ -1,9 +1,35 @@
+<!-- ============================================================
+     ⭐️（※）GeneratorComponent のテンプレート
+     ============================================================
+     src/app/app.component.html の <router-outlet> にこの内容が差し込まれて描画される。
+
+     Angular テンプレートの記法（このファイル全体で使われている）:
+       [value]="inputText()"  → [] で囲むと signal の現在値を HTML 属性に反映できる（プロパティバインディング）
+                                 プロパティ = HTML タグの属性（value, src, disabled など）
+       (input)="..."          → () で囲むとユーザー操作を TypeScript のメソッドにつなげる（イベントバインディング）
+                                 イベント = ユーザーの操作（click, input, change など）
+       [class.active]="条件"  → 条件が true のときだけ active クラスを付与する
+       {{ 変数 }}             → signal の値を文字列として画面に埋め込む（補間）
+       @for                   → Angular 17+ の制御フロー構文でループ処理を行う
+     ============================================================ -->
+
+<!-- ─── INPUT MODULE パネル ─── -->
 <div class="panel">
   <div class="panel-header">
     <span>INPUT MODULE</span>
     <span class="active-badge">● ACTIVE</span>
   </div>
   <div class="panel-body">
+
+    <!-- テキストエリア:
+         [value]="inputText()" → inputText signal の現在値を表示する
+         (input)="inputText.set($any($event.target).value)" → キー入力のたびに inputText signal を更新する
+           $event   = ユーザー操作の情報が入った Angular の特殊変数。(input) イベントなら入力情報が入る。
+           $event.target = 操作されたHTML要素そのもの（ここではテキストエリア）
+           $event.target.value = テキストエリアに今入力されている文字列
+           $any() = TypeScript の型チェックを一時的に回避する Angular テンプレート専用の関数。
+                    $event.target の型が曖昧で .value を直接参照できないため使っている。
+         signal が更新されると Angular が変更を検知して画面を自動再描画する -->
     <textarea
       class="input-box"
       placeholder="> ENTER TEXT PAYLOAD_"
@@ -15,6 +41,12 @@
       <div class="ctrl-group">
         <div class="ctrl-label">OSCILLATION AMPLITUDE</div>
         <div class="slider-row">
+          <!-- スライダー（振れ幅 2〜20）:
+               [value]="width()" → width signal の現在値をスライダーの位置に反映する
+               (input)="width.set(+$any($event.target).value)" → 動かすたびに width signal を数値で更新する
+                 $event.target.value はテキストとして取得されるため、
+                 先頭の + で文字列（例："8"）を数値（例：8）に変換している（単項演算子）。
+                 $any() はテキストエリアと同じ理由（型チェック回避）で使っている。 -->
           <input
             type="range"
             class="slider"
@@ -23,6 +55,7 @@
             [value]="width()"
             (input)="width.set(+$any($event.target).value)"
           />
+          <!-- width signal の現在値をリアルタイム表示 -->
           <span class="slider-val">{{ width() }}</span>
         </div>
       </div>
@@ -30,6 +63,14 @@
       <div class="ctrl-group ctrl-group--fixed">
         <div class="ctrl-label">WAVE PATTERN</div>
         <div class="shape-btns">
+          <!-- @for: src/app/generator/generator.component.ts の shapes 配列（〜 ＞ ＜）の
+                     要素数だけボタンを生成する Angular の制御フロー構文。
+               track s.value → Angular がリストの各要素を識別するためのキーを指定する。
+                               再描画のとき「どのボタンが変化したか」を効率よく判断でき
+                               変わっていないボタンは DOM を作り直さずに済む。
+               [class.active]="shape() === s.value" → 選択中のボタンに active クラスを付与する
+               (click)="setShape(s.value)" → ボタン押下で
+                 src/app/generator/generator.component.ts の setShape() が呼ばれる -->
           @for (s of shapes; track s.value) {
             <button
               class="shape-btn"
@@ -41,23 +82,49 @@
       </div>
     </div>
 
+    <!-- 🌙① 波変換ボタン: クリックすると波変換処理が始まる
+         【(click)="generate()" とは？（イベントバインディング）】
+           () で囲まれた部分はイベント名。click はマウスのクリックを意味する。
+           = の右側に呼び出すメソッドを書く。
+           ユーザーがこのボタンをクリックした瞬間に Angular が
+           src/app/generator/generator.component.ts の generate() を自動で呼び出す。
+           「ボタンと TypeScript のメソッドをつなぐ」仕組み。
+         この後: src/app/generator/generator.component.ts の generate() が発火する（🌙②） -->
     <button class="exec-btn" (click)="generate()">▶ EXECUTE WAVE GENERATION</button>
+
   </div>
 </div>
 
+<!-- ─── OUTPUT STREAM パネル ─── -->
 <div class="panel">
   <div class="panel-header">
     <span>OUTPUT STREAM</span>
+    <!-- 三項演算子: 条件 ? 真のとき : 偽のとき という書き方で if/else を1行で書く記法。
+         charCount() > 0 が true なら文字数を、false（0文字）なら「—」を表示する -->
     <span class="char-count">
       {{ charCount() > 0 ? charCount() + ' CHARS PROCESSED' : '—' }}
     </span>
   </div>
   <div class="panel-body">
+
+    <!-- 🌙⑧ 変換結果の表示エリア
+         原理: src/app/generator/generator.component.ts の generate() が
+               src/app/wave.service.ts から受け取った変換結果を
+               output.set(result) で signal に保存すると、
+               Angular の変更検知が動きここが自動で再描画される。
+               生成前は output signal が空文字のため何も表示されない。 -->
     <div class="output-box">{{ output() }}</div>
+
     <div class="output-footer">
+      <!-- 三項演算子で status signal の値に応じてテキストを切り替える
+           status() === 'complete' が true  → 'WAVE GENERATION COMPLETE' を表示
+           status() === 'complete' が false → 'AWAITING INPUT' を表示 -->
       <span>
         STATUS: {{ status() === 'complete' ? 'WAVE GENERATION COMPLETE' : 'AWAITING INPUT' }}
       </span>
+      <a href="new-page">.</a>
+      <!-- copied signal が true のとき「COPIED」、false のとき「COPY TO CLIPBOARD」を表示
+           クリックで src/app/generator/generator.component.ts の copyToClipboard() が呼ばれる -->
       <button class="copy-btn" (click)="copyToClipboard()">
         {{ copied() ? 'COPIED' : 'COPY TO CLIPBOARD' }}
       </button>

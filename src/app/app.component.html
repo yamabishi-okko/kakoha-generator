@@ -1,11 +1,33 @@
+<!-- ============================================================
+     ⭐️⑥ AppComponent のテンプレート（全ページ共通レイアウト）
+     ============================================================
+     下記の HTML 全体が src/index.html の <app-root> タグの中に描画される。
+     ヘッダーとフッターはどのページでも共通で表示される部分。
+     ページごとに変わる部分は <router-outlet> の位置だけ（⭐️⑦）。
+
+     【{{ }} とは？（補間）】
+       {{ accuracy() }} のように書くと、その場所に TypeScript の値を埋め込める。
+       src/app/app.component.ts で accuracy という signal が定義されており、
+       signal の値が set() で更新されるたびに Angular が自動でここだけ書き換える。
+       ページ全体を再読み込みするわけではなく、該当箇所だけ差し替えるのが特徴。
+
+     この後: このファイル内の <router-outlet>（⭐️⑦）に現在の URL に対応したコンポーネントが差し込まれる
+             ルートURLの場合は GeneratorComponent が生成され、generator.component.html が描画される
+     ============================================================ -->
 <header class="header">
   <div class="header-title">◈ KAKOHA WAVE PROCESSING ENGINE</div>
   <div class="header-stats">
     <div class="stat">
+      <!-- accuracy signal の現在値を表示。
+           src/app/app.component.ts の ngOnInit タイマーが
+           1300ms ごとに this.accuracy.set() を呼ぶたびに自動で書き換わる -->
       <div class="stat-val">{{ accuracy() }}</div>
       <div class="stat-lbl">WAVE ACC</div>
     </div>
     <div class="stat">
+      <!-- latency signal の現在値を表示。
+           src/app/app.component.ts の ngOnInit タイマーが
+           1000ms ごとに this.latency.set() を呼ぶたびに自動で書き換わる -->
       <div class="stat-val">{{ latency() }}</div>
       <div class="stat-lbl">LATENCY</div>
     </div>
@@ -17,7 +39,19 @@
 </header>
 
 <main class="main">
-  <app-generator />
+  <!-- ⭐️⑦ router-outlet: ページごとに内容が変わる「差し込み口」
+       このタグ自体は画面に何も表示しない。
+       Angular Router がブラウザの URL を監視し、
+       src/app/app.routes.ts の routes 配列と照合して（⭐️③）、
+       マッチしたコンポーネントの HTML をこの位置にはめ込む。
+
+       URL が変わるたびに中身だけが入れ替わり、
+       ヘッダーとフッター（このファイルの他の部分）はそのまま残る。
+         ルートURL('')  → GeneratorComponent が生成され generator.component.html が描画される
+         'new-page'    → NewPageComponent が生成され new-page.component.html が描画される
+
+       この後: src/app/generator/generator.component.ts の GeneratorComponent が生成される（⭐️⑧） -->
+  <router-outlet />
 </main>
 
 <footer class="footer">

@@ -8,6 +8,44 @@
   <link rel="icon" type="image/x-icon" href="favicon.ico">
 </head>
 <body>
+  <!--
+    <app-root> は「空の目印タグ」。ブラウザはこれを未知のタグとして無視する。
+    Angular が起動した後、このタグの内側に app.component.html の内容を挿入して表示する。
+  -->
   <app-root></app-root>
+
+  <!--
+    【ビルド（ng serve / ng build）とは？】
+      人間が書いた TypeScript はブラウザが読めないため、
+      Angular CLI が JavaScript に変換する作業のこと。
+
+    【<script> タグはどこに？】
+      このファイルには <script> タグを書いていないが、
+      ビルド時に Angular CLI が自動で下記のような行を差し込む：
+
+      <script src="main-CIKJPFUD.js"></script>
+
+      ※ CIKJPFUD の部分はランダムではなく「ファイルの中身から計算したハッシュ値」。
+         ハッシュ値とは: 同じ内容からは常に同じ文字列が生成される「指紋」のようなもの。
+         コードを変更して再ビルドすると内容が変わるのでハッシュ値も変わり、ファイル名が変わる。
+         なぜ変えるのか: ブラウザは同じ URL のファイルをキャッシュ（保存）して使い回す。
+         ファイル名を変えることで「新しいファイルだ」とブラウザに認識させるため。
+         （実際のビルド済みファイルは dist/kakoha-generator/browser/index.html で確認できる）
+
+    【なぜ main-CIKJPFUD.js を読むと bootstrapApplication() が実行されるのか？】
+      理由は2つある。
+
+      理由①: angular.json に「ビルドの起点は src/main.ts」と書かれている。
+        Angular CLI はそこを出発点にして、import でつながる全ファイルを
+        1つの JS ファイル（main-CIKJPFUD.js）にまとめる。
+        つまり main-CIKJPFUD.js の中身は「main.ts から始まる全コード」。
+
+      理由②: bootstrapApplication() は関数の外（トップレベル）に書かれている。
+        JavaScript はファイルを読み込んだ瞬間、トップレベルのコードを
+        上から順に即座に実行する。
+        だから <script> タグで読み込まれた瞬間に bootstrapApplication() が動く。
+
+      → src/main.ts のコメントへ続く（⭐️①）
+  -->
 </body>
 </html>
