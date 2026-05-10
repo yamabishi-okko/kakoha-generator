@@ -82,14 +82,40 @@
       </div>
     </div>
 
-    <!-- 🌙① 波変換ボタン: クリックすると波変換処理が始まる
-         【(click)="generate()" とは？（イベントバインディング）】
-           () で囲まれた部分はイベント名。click はマウスのクリックを意味する。
-           = の右側に呼び出すメソッドを書く。
-           ユーザーがこのボタンをクリックした瞬間に Angular が
-           src/app/generator/generator.component.ts の generate() を自動で呼び出す。
-           「ボタンと TypeScript のメソッドをつなぐ」仕組み。
-         この後: src/app/generator/generator.component.ts の generate() が発火する（🌙②） -->
+    <!-- 🪼① 処理モード選択ラジオボタン
+         【(change)="mode.set(...)" とは？】
+           ラジオボタンの選択が変わるたびに mode signal を更新する（イベントバインディング）。
+           mode signal が変わると generate() 内の分岐が切り替わり、
+           ローカル処理か API 処理かが決まる。
+         【$any($event.target).value とは？】
+           $event.target = 操作された HTML 要素（ラジオボタン）。
+           .value = そのボタンに設定された value 属性の値（'local' または 'api'）。
+           $any() は TypeScript の型チェックを一時的に回避する Angular テンプレート専用関数。 -->
+    <div class="mode-selector">
+      <span class="ctrl-label">PROCESSING MODE</span>
+      <label class="mode-label">
+        <input
+          type="radio"
+          name="mode"
+          value="local"
+          [checked]="mode() === 'local'"
+          (change)="mode.set($any($event.target).value)"
+        /> LOCAL
+      </label>
+      <label class="mode-label">
+        <input
+          type="radio"
+          name="mode"
+          value="api"
+          [checked]="mode() === 'api'"
+          (change)="mode.set($any($event.target).value)"
+        /> API
+      </label>
+    </div>
+
+    <!-- 🌙①/🪼① 波変換ボタン: クリックすると波変換処理が始まる
+         この後: src/app/generator/generator.component.ts の generate() が発火する（🌙②/🪼②）
+                 mode signal の値に応じてローカル処理または API 処理が選ばれる -->
     <button class="exec-btn" (click)="generate()">▶ EXECUTE WAVE GENERATION</button>
 
   </div>

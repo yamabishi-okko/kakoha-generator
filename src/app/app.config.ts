@@ -27,9 +27,16 @@
 // ============================================================
 
 import { ApplicationConfig } from '@angular/core';
+import { provideHttpClient } from '@angular/common/http';
 import { provideRouter } from '@angular/router';
 import { routes } from './app.routes';
 
+// 🪼② provideHttpClient(): Angular の HTTP 通信機能をアプリ全体で使えるように登録する。
+//   これを書かないと HttpClient を inject() しようとしたときにエラーになる。
+//   provideRouter と同じく「道具の申告」。Angular が起動時に HttpClient の実物を準備する。
 export const appConfig: ApplicationConfig = {
-  providers: [provideRouter(routes)]
+  providers: [
+    provideRouter(routes),
+    provideHttpClient(),
+  ]
 };

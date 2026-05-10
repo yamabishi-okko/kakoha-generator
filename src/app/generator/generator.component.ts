@@ -1,4 +1,5 @@
 import { Component, inject, signal } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
 import { WaveService, WaveShape } from '../wave.service';
 
 // ============================================================
@@ -35,9 +36,11 @@ import { WaveService, WaveShape } from '../wave.service';
 })
 export class GeneratorComponent {
 
-  // inject(): Angular の DI から WaveService を受け取る。波変換のロジックはすべてここに委譲する
-  // 実体は src/app/wave.service.ts の WaveService クラス
+  // inject(): Angular の DI から WaveService・HttpClient を受け取る
   private waveService = inject(WaveService);
+  // 🪼③ HttpClient: Laravel の POST /api/generate にリクエストを送るために使う
+  //   provideHttpClient() を app.config.ts に登録しているため inject() できる
+  private http = inject(HttpClient);
 
   // 各 signal はテンプレート（HTML）と紐づく。set() すると画面が自動更新される
   inputText = signal('');            // テキストエリアの入力内容
@@ -47,6 +50,10 @@ export class GeneratorComponent {
   charCount = signal(0);             // 処理した文字数（改行を除く）
   status = signal<'awaiting' | 'complete'>('awaiting'); // 処理状態
   copied = signal(false);            // コピー完了フラグ（true のとき「COPIED」と表示する）
+
+  // 🪼① mode signal: 処理モードの切り替え。'local' = ブラウザ内処理、'api' = Laravel API 経由
+  //   ラジオボタン（HTML）と紐づき、ユーザーが選んだ値が即座に反映される
+  mode = signal<'local' | 'api'>('local');
 
   // shapes: 波形選択ボタンの定義。
   // src/app/generator/generator.component.html の @for ループでこの配列を使いボタンを生成する。
@@ -59,25 +66,57 @@ export class GeneratorComponent {
   ];
 
   // ============================================================
-  // 🌙② generate(): 波変換ボタン押下時に呼ばれるメソッド
+  // 🌙②/🪼② generate(): 波変換ボタン押下時に呼ばれるメソッド
   // ============================================================
-  // 下記の generate() が動く
+  // mode signal の値によってローカル処理と API 処理を切り替える。
   //
-  // 原理: src/app/generator/generator.component.html の
-  //       「▶ EXECUTE WAVE GENERATION」ボタンの (click)="generate()" によって呼び出される（🌙①）。
-  //       inputText が空なら何もしない（早期リターン）。
-  //       ※ 早期リターン = 条件が満たされない場合、処理の冒頭で即座に return して抜ける書き方。
-  //         空のまま処理を続けると output に空文字が入り「変換完了」状態になってしまうため事前に防ぐ。
-  //       入力がある場合は WaveService に処理を委託し、
-  //       返ってきた結果を output signal に set() することで OUTPUT STREAM を更新する。
+  //   mode === 'local' → WaveService.generate()（ブラウザ内処理）を呼ぶ（従来通り）
+  //   mode === 'api'   → HttpClient.post() で Laravel に送る（🪼③）
   //
-  // この後: src/app/wave.service.ts の generate() が発火する（🌙③）
-  //         処理完了後 output.set() で signal が更新され、
-  //         src/app/generator/generator.component.html の output-box が自動再描画される（🌙⑥）
   // ============================================================
   generate(): void {
     if (!this.inputText().trim()) return; // 空入力は無視して何もしない
 
+    if (this.mode() === 'api') {
+      // ============================================================
+      // 🪼③ API モード: HttpClient.post() で Laravel にリクエストを送る
+      // ============================================================
+      // post() の引数:
+      //   第1引数: 送信先のURL（Laravel サーバーのエンドポイント）
+      //   第2引数: リクエストボディ。{ } で書いたオブジェクトが JSON 文字列に変換されて送られる
+      //
+      // 【型パラメータ <{ result: string }> とは？】
+      //   post<T>() の T に「レスポンスとして返ってくる JSON の形」を指定する書き方（ジェネリクス）。
+      //   ここでは「{ result: 文字列 } という形の JSON が返ってくる」と TypeScript に教えている。
+      //   こう書くと subscribe(response => ...) の response が自動でその型として扱われ、
+      //   response.result と書いたときに型補完が効くようになる。
+      //
+      // 【subscribe() とは？】
+      //   HTTP 通信は非同期処理（結果が返ってくるまで時間がかかる）。
+      //   post() は Observable（将来の値を表すオブジェクト）を返す。
+      //   subscribe() を呼ぶことで「結果が届いたらこの処理を実行する」と登録できる。
+      //   Angular の subscribe() は RxJS という非同期ライブラリの仕組み。
+      //
+      // 【response => { ... } とは？（アロー関数）】
+      //   = の左側 (response) が受け取る引数、右側 { } が処理の中身。
+      //   「Laravel から結果が返ってきたら、その値を response という名前で受け取り、
+      //     { } 内の処理を実行してね」という意味。
+      //   function(response) { ... } を短く書いた形。
+      //
+      // この後: backend/app/Http/Controllers/WaveController.php が処理（🪼④）
+      this.http.post<{ result: string }>(
+        'http://localhost:8000/api/generate',
+        { text: this.inputText(), width: this.width(), shape: this.shape() }
+      ).subscribe(response => {
+        // 🪼⑦ レスポンスを受け取り signal を更新 → HTML が自動再描画される（🪼⑧）
+        this.output.set(response.result);
+        this.charCount.set([...this.inputText()].filter(c => c !== '\n').length);
+        this.status.set('complete');
+      });
+      return;
+    }
+
+    // ローカルモード（従来通り）
     // 🌙③ src/app/wave.service.ts の WaveService.generate() を呼び出す
     const result = this.waveService.generate(this.inputText(), this.width(), this.shape());
 
