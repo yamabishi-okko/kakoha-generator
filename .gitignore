@@ -2,3 +2,7 @@ node_modules
 .angular/
 .superpowers/
 .worktrees/
+.claude/
+docs/
+TODO.md
+.DS_Store
