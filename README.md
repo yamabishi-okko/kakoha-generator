@@ -46,6 +46,17 @@ php artisan serve
 → <http://localhost:4200> を開く  
 → 画面の **PROCESSING MODE** で **LOCAL** / **API** を切り替えて使う
 
+### Docker で起動
+
+```bash
+docker compose up -d
+```
+
+→ <http://localhost:4200> を開く  
+→ API モードも `http://localhost:8000` に自動でつながる  
+→ ログ確認: `docker compose logs -f`  
+→ 停止: `docker compose down`
+
 ### ビルド済みファイルをローカルで動かす
 
 `dist/kakoha-generator/browser/index.html` をブラウザで直接開いても動きません。  
@@ -80,6 +91,7 @@ ng build
 - Angular 17+（Standalone Components、Signals、HttpClient）
 - Laravel 13（API サーバー）
 - 素のCSS
+- Docker / Docker Compose
 
 ---
 
@@ -170,3 +182,37 @@ ng build
 | 🪼⑥ | `backend/app/Http/Controllers/WaveController.php` | 変換結果を `{ "result": "..." }` の JSON にして返す |
 | 🪼⑦ | `src/app/generator/generator.component.ts` | `subscribe()` でレスポンスを受け取り、`output.set()` で結果を signal に保存する |
 | 🪼⑧ | `src/app/generator/generator.component.html` | signal の更新を Angular が検知し、OUTPUT STREAM エリアに変換結果が表示される |
+
+#### Docker 起動の流れ（☁️）
+
+| 順番 | ファイル | 行番号 | 備考 |
+| ---- | -------- | ------ | ---- |
+| 1 | `docker-compose.yml` | 1行目 | ☁️① エントリーポイント |
+| 2 | `docker-compose.yml` | 4行目 | ☁️② frontend サービス定義 |
+| 3 | `Dockerfile` | 1行目 | ☁️⑤ Angular イメージのベース |
+| 4 | `Dockerfile` | 6行目 | ☁️⑥ 依存インストール |
+| 5 | `Dockerfile` | 15行目 | ☁️⑦ ng serve 起動 |
+| 6 | `docker-compose.yml` | 13行目 | ☁️③ backend サービス定義 |
+| 7 | `backend/Dockerfile` | 1行目 | ☁️⑧ Laravel イメージのベース |
+| 8 | `backend/Dockerfile` | 4行目 | ☁️⑨ システムパッケージ追加 |
+| 9 | `backend/Dockerfile` | 12行目 | ☁️⑩ 依存インストール |
+| 10 | `backend/Dockerfile` | 17行目 | ☁️⑪ .env 生成 |
+| 11 | `backend/Dockerfile` | 23行目 | ☁️⑫ php artisan serve 起動 |
+| 12 | `docker-compose.yml` | 22行目 | ☁️④ named volumes 定義 |
+
+### Docker 起動の実行順序（☁️）
+
+| 番号 | ファイル | 何が起きるか |
+| ---- | -------- | ------------ |
+| ☁️① | `docker-compose.yml` | `docker compose up` がこのファイルを読み込み、定義されたサービスを起動する |
+| ☁️② | `docker-compose.yml` | frontend サービスが定義され、ルートの `Dockerfile` を使って Angular イメージをビルドする |
+| ☁️③ | `docker-compose.yml` | backend サービスが定義され、`backend/Dockerfile` を使って Laravel イメージをビルドする |
+| ☁️④ | `docker-compose.yml` | named volumes が定義され、コンテナ内の `node_modules` と `vendor` がホストのマウントで上書きされないよう保持される |
+| ☁️⑤ | `Dockerfile` | `node:22-alpine` を土台に Angular 用イメージを構築し始める |
+| ☁️⑥ | `Dockerfile` | `package.json` を先にコピーして `npm install` する。ソース変更時にキャッシュが効いてビルドが速くなる |
+| ☁️⑦ | `Dockerfile` | `ng serve --host 0.0.0.0` でサーバーを起動。ホスト Mac のブラウザから `localhost:4200` でアクセスできる |
+| ☁️⑧ | `backend/Dockerfile` | `php:8.3-cli-alpine` を土台に Laravel 用イメージを構築し始める |
+| ☁️⑨ | `backend/Dockerfile` | `unzip` / `curl` をインストール（Composer が内部で使用する） |
+| ☁️⑩ | `backend/Dockerfile` | `composer.json` を先にコピーして `composer install` する。☁️⑥ と同じキャッシュ活用の考え方 |
+| ☁️⑪ | `backend/Dockerfile` | `.env.example` を `.env` にコピーしてアプリキーを生成する |
+| ☁️⑫ | `backend/Dockerfile` | `php artisan serve --host=0.0.0.0` でサーバーを起動。ホスト Mac のブラウザから `localhost:8000` でアクセスできる |
